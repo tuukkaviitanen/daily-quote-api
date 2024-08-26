@@ -1,0 +1,85 @@
+openapi: 3.1.0
+info:
+  version: 0.0.1
+  title: Daily quotes API
+  description: Provides quotes
+  license:
+    name: MIT
+    url: http://opensource.org/licenses/MIT
+paths:
+  /quote:
+    get:
+      summary: Responds with a quote
+      tags:
+        - Quotes
+      parameters:
+        - in: query
+          name: time_interval
+          description: The time interval the quite is refreshed
+          schema:
+            type: string
+            default: daily
+            enum:
+              - secondly
+              - minutely
+              - hourly
+              - daily
+              - weekly
+              - fortnightly
+              - monthly
+              - yearly
+      responses:
+        200:
+          description: Fetched quote successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+        400:
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBody'
+        500:
+          description: Unexpected internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBody'
+
+components:
+  schemas:
+    ErrorBody:
+      type: object
+      properties:
+        error:
+          type: string
+          examples:
+            - Error occurred
+    Quote:
+      type: object
+      description: Quote object
+      properties:
+        title:
+          type: string
+          default: Quote of the day
+          enum:
+            - Quote of the second
+            - Quote of the minute
+            - Quote of the hour
+            - Quote of the day
+            - Quote of the week
+            - Quote of the fortnight
+            - Quote of the month
+            - Quote of the year
+        quote:
+          type: string
+          description: The quote itself
+          examples:
+            - The best way out is always through.
+        author:
+          type: string
+          description: The author of the quote
+          examples:
+            - Robert Frost
