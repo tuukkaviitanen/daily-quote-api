@@ -1,0 +1,9 @@
+version: "3"
+
+tasks:
+  run:
+    cmds:
+      - go run ./cmd/daily_quote_api
+  build:
+    cmds:
+      - go build ./cmd/daily_quote_api
