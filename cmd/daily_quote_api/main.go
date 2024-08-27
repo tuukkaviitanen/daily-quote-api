@@ -1,19 +1,29 @@
 package main
 
 import (
-	"daily_quote_api/internal/routers"
+	"daily_quote_api/internal"
 	"fmt"
-	"net/http"
+	"log"
+	"os"
+	"strconv"
 )
 
 func main() {
-	server := http.NewServeMux()
+	portString := os.Getenv("PORT")
+	if portString == "" {
+		portString = "8080"
+	}
 
-	quoteRouter := routers.GetQuoteRouter()
+	port, err := strconv.ParseInt(portString, 0, 64)
+	if err != nil {
+		log.Fatalln("PORT is invalid, Error:", err)
+	}
 
-	server.Handle("/quote", quoteRouter)
+	router := internal.GetRouter()
 
-	if err := http.ListenAndServe("localhost:8080", server); err != nil {
-		fmt.Println(err.Error())
+	address := fmt.Sprintf(":%v", port)
+
+	if err := router.Run(address); err != nil {
+		log.Fatalln("Error occurred while running the server, Error", err)
 	}
 }
