@@ -1,4 +1,4 @@
-package utils
+package router
 
 import (
 	"daily_quote_api/internal/endpoints"

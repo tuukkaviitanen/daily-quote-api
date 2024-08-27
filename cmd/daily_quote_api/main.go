@@ -2,7 +2,7 @@ package main
 
 import (
 	"daily_quote_api/internal/database"
-	"daily_quote_api/internal/utils"
+	"daily_quote_api/internal/router"
 	"fmt"
 	"log"
 	"os"
@@ -22,7 +22,7 @@ func main() {
 
 	database.ConnectToDatabase()
 
-	router := utils.GetRouter()
+	router := router.GetRouter()
 
 	address := fmt.Sprintf(":%v", port)
 
