@@ -1,4 +1,4 @@
-package internal
+package utils
 
 import (
 	"daily_quote_api/internal/endpoints"
