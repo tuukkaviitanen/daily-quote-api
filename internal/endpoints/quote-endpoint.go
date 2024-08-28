@@ -28,7 +28,7 @@ func GetQuoteEndpoint(context *gin.Context) {
 		return
 	}
 
-	todayEpoch := utils.IntervalToEpoch(unitOfTime)
+	todayEpoch := utils.UnitOfTimeToEpoch(unitOfTime)
 
 	seed := int64(todayEpoch)
 	randomGenerator := rand.New(rand.NewSource(seed))

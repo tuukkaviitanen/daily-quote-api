@@ -24,7 +24,7 @@ func getStartOfFortnight(date time.Time) time.Time {
 	return startOfWeek
 }
 
-func IntervalToEpoch(interval enums.UnitOfTime) int64 {
+func UnitOfTimeToEpoch(interval enums.UnitOfTime) int64 {
 	var dateTime time.Time
 
 	now := time.Now()
