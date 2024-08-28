@@ -28,10 +28,10 @@ RUN  task build
 FROM swaggerapi/swagger-ui:v5.17.14 as swagger-builder
 
 # Remove searchbar/topbar
-RUN sed -i 's/SwaggerUIStandalonePreset/SwaggerUIStandalonePreset.slice(1)/' /usr/share/nginx/html/swagger-initializer.js
-
+RUN sed -i 's#SwaggerUIStandalonePreset#SwaggerUIStandalonePreset.slice(1)#' /usr/share/nginx/html/swagger-initializer.js
 # Replace default doc with local doc
 RUN sed -i 's#https://petstore.swagger.io/v2/swagger.json#/swagger.yaml#' /usr/share/nginx/html/swagger-initializer.js
+RUN sed -i 's#Swagger UI#Daily quotes API#' /usr/share/nginx/html/index.html
 
 # Minimal final stage for running the application in a stripped down linux
 FROM scratch

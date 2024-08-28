@@ -14,8 +14,11 @@ func GetRouter() *gin.Engine {
 		quotes.GET("/", endpoints.GetQuoteEndpoint)
 	}
 
-	// Redirect /swagger to /swagger/
+	// Redirect / and /swagger to /swagger/
 	router.GET("/swagger", func(c *gin.Context) {
+		c.Redirect(301, "/swagger/")
+	})
+	router.GET("/", func(c *gin.Context) {
 		c.Redirect(301, "/swagger/")
 	})
 
