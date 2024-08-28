@@ -14,5 +14,13 @@ func GetRouter() *gin.Engine {
 		quotes.GET("/", endpoints.GetQuoteEndpoint)
 	}
 
+	// Redirect /swagger to /swagger/
+	router.GET("/swagger", func(c *gin.Context) {
+		c.Redirect(301, "/swagger/")
+	})
+
+	router.StaticFile("/swagger.yaml", "./api/openapi.yaml")
+	router.Static("/swagger", "./api/swagger-ui")
+
 	return router
 }
