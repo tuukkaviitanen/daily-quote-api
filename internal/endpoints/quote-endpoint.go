@@ -28,7 +28,7 @@ func GetQuoteEndpoint(context *gin.Context) {
 		return
 	}
 
-	todayEpoch, unit := utils.IntervalToEpoch(unitOfTime)
+	todayEpoch := utils.IntervalToEpoch(unitOfTime)
 
 	seed := int64(todayEpoch)
 	randomGenerator := rand.New(rand.NewSource(seed))
@@ -40,7 +40,7 @@ func GetQuoteEndpoint(context *gin.Context) {
 		return
 	}
 
-	title := fmt.Sprintf("Quote of the %v", unit)
+	title := fmt.Sprintf("Quote of the %v", unitOfTimeString)
 
 	returnBody := models.Quote{Title: title, Quote: quote.Quote, Author: quote.Author}
 
