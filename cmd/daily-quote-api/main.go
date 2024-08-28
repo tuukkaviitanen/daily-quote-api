@@ -1,7 +1,8 @@
 package main
 
 import (
-	"daily_quote_api/internal"
+	"daily-quote-api/internal/database"
+	"daily-quote-api/internal/router"
 	"fmt"
 	"log"
 	"os"
@@ -19,7 +20,9 @@ func main() {
 		log.Fatalln("PORT is invalid, Error:", err)
 	}
 
-	router := internal.GetRouter()
+	database.ConnectToDatabase()
+
+	router := router.GetRouter()
 
 	address := fmt.Sprintf(":%v", port)
 

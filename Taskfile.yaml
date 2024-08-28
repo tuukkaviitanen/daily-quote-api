@@ -3,7 +3,7 @@ version: "3"
 tasks:
   run:
     cmds:
-      - go run ./cmd/daily_quote_api
+      - go run ./cmd/daily-quote-api
   build:
     cmds:
-      - go build ./cmd/daily_quote_api
+      - go build ./cmd/daily-quote-api
