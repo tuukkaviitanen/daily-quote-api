@@ -7,17 +7,18 @@ import (
 	"daily-quote-api/internal/utils"
 	"fmt"
 	"math/rand"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
 func GetQuoteEndpoint(context *gin.Context) {
-	timeIntervalString := context.DefaultQuery("time_interval", string(enums.DAILY))
+	unitOfTimeString := strings.ToLower(context.DefaultQuery("of-the", string(enums.DAY)))
 
-	timeInterval := enums.TimeInterval(timeIntervalString)
+	unitOfTime := enums.UnitOfTime(unitOfTimeString)
 
-	if !timeInterval.IsValidTimeInterval() {
-		context.JSON(400, gin.H{"error": "Invalid time_interval"})
+	if !unitOfTime.IsValidUnitOfTime() {
+		context.JSON(400, gin.H{"error": fmt.Sprintf("Invalid unit of time: '%v'", unitOfTimeString)})
 		return
 	}
 
@@ -27,7 +28,7 @@ func GetQuoteEndpoint(context *gin.Context) {
 		return
 	}
 
-	todayEpoch, unit := utils.IntervalToEpoch(timeInterval)
+	todayEpoch, unit := utils.IntervalToEpoch(unitOfTime)
 
 	seed := int64(todayEpoch)
 	randomGenerator := rand.New(rand.NewSource(seed))

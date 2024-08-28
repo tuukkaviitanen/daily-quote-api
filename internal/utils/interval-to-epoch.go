@@ -24,37 +24,37 @@ func getStartOfFortnight(date time.Time) time.Time {
 	return startOfWeek
 }
 
-func IntervalToEpoch(interval enums.TimeInterval) (int64, string) {
+func IntervalToEpoch(interval enums.UnitOfTime) (int64, string) {
 	var dateTime time.Time
 	var unit string
 
 	now := time.Now()
 
 	switch interval {
-	case enums.SECONDLY:
+	case enums.SECOND:
 		dateTime = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second(), 0, time.UTC)
 		unit = "second"
-	case enums.MINUTELY:
+	case enums.MINUTE:
 		dateTime = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), 0, 0, time.UTC)
 		unit = "minute"
-	case enums.HOURLY:
+	case enums.HOUR:
 		dateTime = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), 0, 0, 0, time.UTC)
 		unit = "hour"
-	case enums.DAILY:
+	case enums.DAY:
 		dateTime = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 		unit = "day"
-	case enums.WEEKLY:
+	case enums.WEEK:
 		startOfWeek := getStartOfWeek(now)
 		dateTime = time.Date(startOfWeek.Year(), startOfWeek.Month(), startOfWeek.Day(), 0, 0, 0, 0, time.UTC)
 		unit = "week"
-	case enums.FORTNIGHTLY:
+	case enums.FORTNIGHT:
 		startOfFortnight := getStartOfFortnight(now)
 		dateTime = time.Date(startOfFortnight.Year(), startOfFortnight.Month(), startOfFortnight.Day(), 0, 0, 0, 0, time.UTC)
 		unit = "fortnight"
-	case enums.MONTHLY:
+	case enums.MONTH:
 		dateTime = time.Date(now.Year(), now.Month(), 0, 0, 0, 0, 0, time.UTC)
 		unit = "month"
-	case enums.YEARLY:
+	case enums.YEAR:
 		dateTime = time.Date(now.Year(), 0, 0, 0, 0, 0, 0, time.UTC)
 		unit = "year"
 	}

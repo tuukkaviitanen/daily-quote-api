@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  version: 0.0.1
+  version: 0.0.2
   title: Daily quotes API
   description: Provides quotes
   license:
@@ -13,21 +13,7 @@ paths:
       tags:
         - Quotes
       parameters:
-        - in: query
-          name: time_interval
-          description: The time interval the quite is refreshed
-          schema:
-            type: string
-            default: daily
-            enum:
-              - secondly
-              - minutely
-              - hourly
-              - daily
-              - weekly
-              - fortnightly
-              - monthly
-              - yearly
+        - $ref: '#/components/parameters/OfThe'
       responses:
         200:
           description: Fetched quote successfully
@@ -36,27 +22,29 @@ paths:
               schema:
                 $ref: '#/components/schemas/Quote'
         400:
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorBody'
+          $ref: '#/components/responses/ValidationError'
         500:
-          description: Unexpected internal error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorBody'
+          $ref: '#/components/responses/InternalError'
 
 components:
+  parameters:
+    OfThe:
+      in: query
+      name: of-the
+      description: The time interval the quite is refreshed
+      schema:
+        type: string
+        default: day
+        enum:
+          - second
+          - minute
+          - hour
+          - day
+          - week
+          - fortnight
+          - month
+          - year
   schemas:
-    ErrorBody:
-      type: object
-      properties:
-        error:
-          type: string
-          examples:
-            - Error occurred
     Quote:
       type: object
       description: Quote object
@@ -83,3 +71,26 @@ components:
           description: The author of the quote
           examples:
             - Robert Frost
+  responses:
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                examples:
+                  - Some invalid value input
+    InternalError:
+      description: Internal error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                examples:
+                  - Unexpected error occurred
