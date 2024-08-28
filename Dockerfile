@@ -11,6 +11,9 @@ RUN sqlite3 database.sqlite 'CREATE TABLE quotes(id INTEGER PRIMARY KEY, quote T
 # App builder for building the API to a standalone binary
 FROM golang:1.23.0 as app_builder
 
+# Install taskfile for running tasks
+RUN sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d
+
 WORKDIR /app
 
 COPY go.mod go.sum ./
@@ -19,10 +22,7 @@ RUN go mod download
 
 COPY . .
 
-ENV CGO_ENABLED=0
-ENV GOOS=linux
-
-RUN  go build -a -installsuffix cgo ./cmd/daily-quote-api
+RUN  task build
 
 # Minimal final stage for running the application in a stripped down linux
 FROM scratch

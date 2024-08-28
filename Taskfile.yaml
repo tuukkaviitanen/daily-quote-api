@@ -5,5 +5,8 @@ tasks:
     cmds:
       - go run ./cmd/daily-quote-api
   build:
+    env:
+      CGO_ENABLED: 0
+      GOOS: linux
     cmds:
-      - go build ./cmd/daily-quote-api
+      - go build -a -installsuffix cgo ./cmd/daily-quote-api
