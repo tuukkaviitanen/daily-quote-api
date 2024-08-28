@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"daily_quote_api/internal/enums"
+	"daily-quote-api/internal/enums"
 	"time"
 )
 

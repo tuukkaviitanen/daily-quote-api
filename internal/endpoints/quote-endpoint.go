@@ -1,10 +1,10 @@
 package endpoints
 
 import (
-	"daily_quote_api/internal/enums"
-	"daily_quote_api/internal/models"
-	"daily_quote_api/internal/services"
-	"daily_quote_api/internal/utils"
+	"daily-quote-api/internal/enums"
+	"daily-quote-api/internal/models"
+	"daily-quote-api/internal/services"
+	"daily-quote-api/internal/utils"
 	"fmt"
 	"math/rand"
 

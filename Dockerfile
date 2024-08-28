@@ -22,7 +22,7 @@ COPY . .
 ENV CGO_ENABLED=0
 ENV GOOS=linux
 
-RUN  go build -a -installsuffix cgo ./cmd/daily_quote_api
+RUN  go build -a -installsuffix cgo ./cmd/daily-quote-api
 
 # Minimal final stage for running the application in a stripped down linux
 FROM scratch
@@ -31,11 +31,11 @@ WORKDIR /app
 
 # Only includes API and database files
 COPY --from=db_builder /tmp/database.sqlite .
-COPY --from=app_builder /app/daily_quote_api .
+COPY --from=app_builder /app/daily-quote-api .
 
 ENV GIN_MODE=release
 ENV PORT=8080
 
 EXPOSE 8080
 
-CMD ["./daily_quote_api"]
+CMD ["./daily-quote-api"]

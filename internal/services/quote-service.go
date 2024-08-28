@@ -1,8 +1,8 @@
 package services
 
 import (
-	"daily_quote_api/internal/database"
-	"daily_quote_api/internal/entities"
+	"daily-quote-api/internal/database"
+	"daily-quote-api/internal/entities"
 	"fmt"
 )
 

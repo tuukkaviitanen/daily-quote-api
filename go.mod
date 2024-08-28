@@ -1,4 +1,4 @@
-module daily_quote_api
+module daily-quote-api
 
 go 1.23.0
 

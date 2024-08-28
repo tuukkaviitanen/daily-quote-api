@@ -1,7 +1,7 @@
 package router
 
 import (
-	"daily_quote_api/internal/endpoints"
+	"daily-quote-api/internal/endpoints"
 
 	"github.com/gin-gonic/gin"
 )

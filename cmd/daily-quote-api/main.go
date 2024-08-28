@@ -1,8 +1,8 @@
 package main
 
 import (
-	"daily_quote_api/internal/database"
-	"daily_quote_api/internal/router"
+	"daily-quote-api/internal/database"
+	"daily-quote-api/internal/router"
 	"fmt"
 	"log"
 	"os"
