@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   version: 0.0.2
-  title: Daily quotes API
+  title: Daily Quote API
   description: Provides quotes
   license:
     name: MIT
