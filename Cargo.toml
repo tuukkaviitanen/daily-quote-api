@@ -1,0 +1,9 @@
+[package]
+name = "daily-quote-api"
+edition = "2024"
+
+[dependencies]
+rocket = { version = "0.5.1", features = ["json"] }
+sqlx = { version = "0.8.6", features = ["sqlite", "macros", "runtime-tokio"] }
+serde = { version = "1.0.228", features = ["derive"] }
+chrono = "0.4.42"

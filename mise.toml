@@ -1,9 +1,6 @@
 [tools]
 go = "1.23.0"
+rust = "1.90.0"
 
-[tasks.run]
-run = "go run ./cmd/daily-quote-api"
-
-[tasks.build]
-run = "go build -a -installsuffix cgo ./cmd/daily-quote-api"
-env = { CGO_ENABLED = 0, GOOS = "linux" }
+[tasks.default]
+run = "docker build -t daily-quote-api-dev . && docker run -p 8080:8080 daily-quote-api-dev"
