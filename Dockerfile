@@ -1,5 +1,5 @@
 # Database builder stage for initializing and populating the quotes database
-FROM keinos/sqlite3 as db-builder
+FROM keinos/sqlite3:3.50.4 AS db-builder
 
 WORKDIR /tmp
 
@@ -9,10 +9,7 @@ RUN sqlite3 database.sqlite 'CREATE TABLE quotes(id INTEGER PRIMARY KEY, quote T
     && sqlite3 database.sqlite '.import quotes.csv quotes --csv'
 
 # App builder for building the API to a standalone binary
-FROM golang:1.23.0 as app-builder
-
-# Install taskfile for running tasks
-RUN sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d
+FROM golang:1.23.0 AS app-builder
 
 WORKDIR /app
 
@@ -22,10 +19,13 @@ RUN go mod download
 
 COPY . .
 
-RUN  task build
+ENV CGO_ENABLED=0
+ENV GOOS=linux
+
+RUN go build -a -installsuffix cgo ./cmd/daily-quote-api
 
 # Swagger UI builder for fetching latest Swagger UI files
-FROM swaggerapi/swagger-ui:v5.17.14 as swagger-builder
+FROM swaggerapi/swagger-ui:v5.17.14 AS swagger-builder
 
 # Remove searchbar/topbar
 RUN sed -i 's#SwaggerUIStandalonePreset#SwaggerUIStandalonePreset.slice(1)#' /usr/share/nginx/html/swagger-initializer.js
