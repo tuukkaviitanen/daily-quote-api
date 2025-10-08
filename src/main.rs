@@ -19,11 +19,20 @@ struct Quote {
     author: String,
 }
 
+#[derive(serde::Serialize)]
+struct QuoteResponse {
+    title: String,
+    quote: String,
+    author: String,
+}
+
 #[derive(rocket::form::FromFormField)]
+#[derive(Default)]
 enum UnitOfTime {
     Second,
     Minute,
     Hour,
+    #[default]
     Day,
     Week,
     Fortnight,
@@ -31,27 +40,59 @@ enum UnitOfTime {
     Year,
 }
 
-use rocket::serde::json::Json;
-use rocket::http::Status;
-use chrono::{Datelike, Timelike, Utc, NaiveDate, NaiveDateTime, Duration};
-    
-#[get("/quote?<unit_of_time>")]
-async fn quote(unit_of_time: Option<UnitOfTime>, conn: &rocket::State<sqlx::SqlitePool>) -> Result<Json<Quote>, Status> {
-    match query_random_quote(conn)
-        .await
-    {   
-        Ok(quote) => Ok(Json(quote)),
-        Err(e) => {
-            eprintln!("Database error: {}", e);
-            Err(Status::InternalServerError)
+impl UnitOfTime {
+    fn as_str(&self) -> &'static str {
+        match self {
+            UnitOfTime::Second => "second",
+            UnitOfTime::Minute => "minute",
+            UnitOfTime::Hour => "hour",
+            UnitOfTime::Day => "day",
+            UnitOfTime::Week => "week",
+            UnitOfTime::Fortnight => "fortnight",
+            UnitOfTime::Month => "month",
+            UnitOfTime::Year => "year",
         }
     }
 }
 
-async fn query_random_quote(conn: &sqlx::SqlitePool) -> Result<Quote, sqlx::Error> {
-    sqlx::query_as::<_, Quote>("SELECT id, quote, author FROM quotes ORDER BY RANDOM() LIMIT 1")
-        .fetch_one(conn)
-        .await
+use rocket::serde::json::Json;
+use rocket::http::Status;
+use chrono::{Datelike, Timelike, Utc, NaiveDate, NaiveDateTime, Duration};
+use rand::{Rng, SeedableRng};
+use rand::rngs::StdRng;
+    
+#[get("/quote?<of_the>")]
+async fn quote(of_the: Option<UnitOfTime>, conn: &rocket::State<sqlx::SqlitePool>) -> Result<Json<QuoteResponse>, Status> {
+
+    let unit_of_time = of_the.unwrap_or_default();
+
+    let epoch =
+        match unit_of_time_to_epoch(&unit_of_time) {
+            Ok(epoch) => epoch,
+            Err(e) => {
+                eprintln!("Error converting unit of time to epoch: {}", e);
+                return Err(Status::InternalServerError);
+            }
+        };
+
+    let quote_count = query_quote_count(conn).await.map_err(|e| {
+        eprintln!("Database error: {}", e);
+        Status::InternalServerError
+    })?;
+
+    let mut rng = StdRng::seed_from_u64(epoch as u64);
+    let quote_id = rng.random_range(1..quote_count);
+
+    let quote = query_quote_by_id(conn, quote_id).await.map_err(|e| {
+        eprintln!("Database error: {}", e);
+        Status::InternalServerError
+    })?;
+
+    Ok(Json(QuoteResponse {
+        title: format!("Quote of the {}", unit_of_time.as_str()),
+        quote: quote.quote,
+        author: quote.author,
+    }))
 }
 
 async fn query_quote_count(conn: &sqlx::SqlitePool) -> Result<i64, sqlx::Error> {
@@ -68,7 +109,7 @@ async fn query_quote_by_id(conn: &sqlx::SqlitePool, id: i64) -> Result<Quote, sq
         .await
 }
 
-fn unit_of_time_to_epoch(unit_of_time: UnitOfTime) -> Result<i64, &'static str> {
+fn unit_of_time_to_epoch(unit_of_time: &UnitOfTime) -> Result<i64, &'static str> {
     let now = Utc::now();
     let date = now.date_naive();
 
