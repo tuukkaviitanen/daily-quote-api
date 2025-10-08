@@ -10,29 +10,21 @@ on:
 
 jobs:
   verification:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
 
     steps:
       - name: Fetch code
         uses: actions/checkout@v4
 
-      - name: Install Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.23.0"
-
-      - name: Install Task
-        uses: arduino/setup-task@v2
-        with:
-          version: 3.x
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up cli tools with mise Mise
+        uses: jdx/mise-action@v2
 
       - name: Install project dependencies
         run: go mod download
 
       - name: Build application
-        run: task build
+        run: mise run build
 
       - name: Upload binary as artifact
         uses: actions/upload-artifact@v4
@@ -44,7 +36,7 @@ jobs:
   tag_release:
     needs: ["verification"]
     if: ${{ github.event_name == 'push' }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     outputs:
@@ -60,7 +52,7 @@ jobs:
 
   publish_docker_image:
     needs: [tag_release]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: write
