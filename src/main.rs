@@ -1,33 +1,106 @@
-#[macro_use] extern crate rocket;
+use poem::{listener::TcpListener, web::{Data}, EndpointExt, Result, Route};
+use poem_openapi::{
+    param::Query, payload::{Json, Response}, ApiResponse, OpenApi, OpenApiService, Tags
+};
 
-#[launch]
-async fn rocket() -> _ {
-    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    println!("Connecting to database at: {}", database_url);
-    let db_pool = sqlx::SqlitePool::connect(&database_url).await.expect("Failed to connect to database");
-
-    rocket::build()
-        .manage(db_pool)
-        .mount("/", routes![quote])
+#[derive(ApiResponse)]
+enum QuoteResponses {
+    #[oai(status = "200")]
+    Quote(Json<QuoteResponse>),
+    #[oai(status = "500")]
+    InternalServerError
 }
 
-#[derive(sqlx::FromRow, serde::Serialize)]
-#[derive(Debug)]
+struct Api;
+
+#[derive(Tags)]
+enum ApiTags {
+    Quotes,
+}
+
+#[OpenApi]
+impl Api {
+    /// Responds with a quote
+    #[oai(path = "/quote", method = "get", tag = "ApiTags::Quotes")]
+    async fn quote(
+        &self,
+        /// The time interval the quite is refreshed
+        of_the: Query<Option<UnitOfTime>>,
+        conn: Data<&sqlx::SqlitePool>,
+    ) -> Result<QuoteResponses> {
+        let unit_of_time = of_the.0.unwrap_or_default();
+
+        let epoch = unit_of_time_to_epoch(&unit_of_time).map_err(|e| {
+                eprintln!("Error converting unit of time to epoch: {}", e);
+                QuoteResponses::InternalServerError
+        })?;
+        
+        let quote_count = query_quote_count(&conn).await.map_err(|e| {
+            eprintln!("Database error: {}", e);
+            QuoteResponses::InternalServerError
+        })?;
+
+        let mut rng = StdRng::seed_from_u64(epoch as u64);
+        let quote_id = rng.random_range(1..quote_count);
+
+        let quote = query_quote_by_id(&conn, quote_id).await.map_err(|e| {
+            eprintln!("Database error: {}", e);
+            QuoteResponses::InternalServerError
+        })?;
+
+        Ok(QuoteResponses::Quote(Json(QuoteResponse {
+            title: format!("Quote of the {}", unit_of_time.as_str()),
+            quote: quote.quote,
+            author: quote.author,
+        })))
+    }
+
+    #[oai(path = "/", method = "get", hidden)]
+    async fn ui(&self) -> Response<()> {
+        Response::new(())
+            .header("Location", "/swagger")
+            .status(poem::http::StatusCode::FOUND)
+    }
+}
+
+#[tokio::main]
+async fn main() -> Result<(), std::io::Error> {
+    let api_service = OpenApiService::new(Api, "Daily Quote API", "1.0").description("Provides quotes").license("MIT");
+
+    let ui = api_service.swagger_ui();
+
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    println!("Connecting to database at: {}", database_url);
+    let db_pool = sqlx::SqlitePool::connect(&database_url)
+        .await
+        .expect("Failed to connect to database");
+
+    let app = Route::new()
+        .nest("/", api_service)
+        .nest("/swagger", ui)
+        .data(db_pool);
+
+    poem::Server::new(TcpListener::bind("0.0.0.0:8080"))
+        .run(app)
+        .await
+}
+
+#[derive(sqlx::FromRow, serde::Serialize, Debug)]
 struct Quote {
     id: i64,
     quote: String,
     author: String,
 }
 
-#[derive(serde::Serialize)]
+#[derive(Object)]
 struct QuoteResponse {
     title: String,
     quote: String,
     author: String,
 }
 
-#[derive(rocket::form::FromFormField)]
-#[derive(Default)]
+#[derive(Default, Enum)]
+#[oai(rename_all = "lowercase")]
 enum UnitOfTime {
     Second,
     Minute,
@@ -55,45 +128,10 @@ impl UnitOfTime {
     }
 }
 
-use rocket::serde::json::Json;
-use rocket::http::Status;
-use chrono::{Datelike, Timelike, Utc, NaiveDate, NaiveDateTime, Duration};
-use rand::{Rng, SeedableRng};
+use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, Timelike, Utc};
+use poem_openapi::{Object, Enum};
 use rand::rngs::StdRng;
-    
-#[get("/quote?<of_the>")]
-async fn quote(of_the: Option<UnitOfTime>, conn: &rocket::State<sqlx::SqlitePool>) -> Result<Json<QuoteResponse>, Status> {
-
-    let unit_of_time = of_the.unwrap_or_default();
-
-    let epoch =
-        match unit_of_time_to_epoch(&unit_of_time) {
-            Ok(epoch) => epoch,
-            Err(e) => {
-                eprintln!("Error converting unit of time to epoch: {}", e);
-                return Err(Status::InternalServerError);
-            }
-        };
-
-    let quote_count = query_quote_count(conn).await.map_err(|e| {
-        eprintln!("Database error: {}", e);
-        Status::InternalServerError
-    })?;
-
-    let mut rng = StdRng::seed_from_u64(epoch as u64);
-    let quote_id = rng.random_range(1..quote_count);
-
-    let quote = query_quote_by_id(conn, quote_id).await.map_err(|e| {
-        eprintln!("Database error: {}", e);
-        Status::InternalServerError
-    })?;
-
-    Ok(Json(QuoteResponse {
-        title: format!("Quote of the {}", unit_of_time.as_str()),
-        quote: quote.quote,
-        author: quote.author,
-    }))
-}
+use rand::{Rng, SeedableRng};
 
 async fn query_quote_count(conn: &sqlx::SqlitePool) -> Result<i64, sqlx::Error> {
     let (count,): (i64,) = sqlx::query_as("SELECT COUNT(*) FROM quotes")
@@ -126,21 +164,18 @@ fn unit_of_time_to_epoch(unit_of_time: &UnitOfTime) -> Result<i64, &'static str>
         ),
         UnitOfTime::Hour => NaiveDateTime::new(
             date,
-            chrono::NaiveTime::from_hms_opt(now.hour(), 0, 0)
-                .ok_or("Invalid time for Hour")?,
+            chrono::NaiveTime::from_hms_opt(now.hour(), 0, 0).ok_or("Invalid time for Hour")?,
         ),
         UnitOfTime::Day => NaiveDateTime::new(
             date,
-            chrono::NaiveTime::from_hms_opt(0, 0, 0)
-                .ok_or("Invalid time for Day")?,
+            chrono::NaiveTime::from_hms_opt(0, 0, 0).ok_or("Invalid time for Day")?,
         ),
         UnitOfTime::Week => {
             let weekday = date.weekday().num_days_from_monday();
             let start_of_week = date - Duration::days(weekday.into());
             NaiveDateTime::new(
                 start_of_week,
-                chrono::NaiveTime::from_hms_opt(0, 0, 0)
-                    .ok_or("Invalid time for Week")?,
+                chrono::NaiveTime::from_hms_opt(0, 0, 0).ok_or("Invalid time for Week")?,
             )
         }
         UnitOfTime::Fortnight => {
@@ -148,21 +183,17 @@ fn unit_of_time_to_epoch(unit_of_time: &UnitOfTime) -> Result<i64, &'static str>
             let start_of_fortnight = date - Duration::days(days_since_fortnight.into());
             NaiveDateTime::new(
                 start_of_fortnight,
-                chrono::NaiveTime::from_hms_opt(0, 0, 0)
-                    .ok_or("Invalid time for Fortnight")?,
+                chrono::NaiveTime::from_hms_opt(0, 0, 0).ok_or("Invalid time for Fortnight")?,
             )
         }
         UnitOfTime::Month => NaiveDateTime::new(
             NaiveDate::from_ymd_opt(date.year(), date.month(), 1)
                 .ok_or("Invalid date for Month")?,
-            chrono::NaiveTime::from_hms_opt(0, 0, 0)
-                .ok_or("Invalid time for Month")?,
+            chrono::NaiveTime::from_hms_opt(0, 0, 0).ok_or("Invalid time for Month")?,
         ),
         UnitOfTime::Year => NaiveDateTime::new(
-            NaiveDate::from_ymd_opt(date.year(), 1, 1)
-                .ok_or("Invalid date for Year")?,
-            chrono::NaiveTime::from_hms_opt(0, 0, 0)
-                .ok_or("Invalid time for Year")?,
+            NaiveDate::from_ymd_opt(date.year(), 1, 1).ok_or("Invalid date for Year")?,
+            chrono::NaiveTime::from_hms_opt(0, 0, 0).ok_or("Invalid time for Year")?,
         ),
     };
 

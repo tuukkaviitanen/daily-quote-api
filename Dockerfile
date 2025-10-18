@@ -17,7 +17,7 @@ COPY ./Cargo.toml ./
 COPY ./Cargo.lock ./
 COPY ./src ./src
 
-RUN cargo build --release
+RUN cargo build
 
 # Swagger UI builder for fetching latest Swagger UI files
 FROM swaggerapi/swagger-ui:v5.17.14 AS swagger-builder
@@ -35,7 +35,7 @@ WORKDIR /app
 
 # Import app and database
 COPY --from=db-builder /tmp/database.sqlite .
-COPY --from=app-builder /app/target/release/daily-quote-api .
+COPY --from=app-builder /app/target/debug/daily-quote-api .
 
 # Import Swagger UI and OpenAPI doc
 COPY --from=swagger-builder /usr/share/nginx/html/ ./api/swagger-ui

@@ -3,4 +3,4 @@ go = "1.23.0"
 rust = "1.90.0"
 
 [tasks.default]
-run = "docker build -t daily-quote-api-dev . && docker run -p 8080:8080 daily-quote-api-dev"
+run = "docker build -t daily-quote-api-dev . && docker run --rm -p 8080:8080 daily-quote-api-dev"
