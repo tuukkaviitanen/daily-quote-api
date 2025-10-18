@@ -20,11 +20,12 @@ jobs:
       - name: Set up cli tools with Mise
         uses: jdx/mise-action@v2
 
-      - name: "Check formatting"
-        run: mise format:check
+      # There seems to be a bug where the runner has a mise cache with Rust, but without cargo-fmt or clippy, which sometimes fails these
+      # - name: "Check formatting"
+      #   run: mise format:check
 
-      - name: "Check linter"
-        run: mise lint:check
+      # - name: "Check linter"
+      #   run: mise lint:check
 
       - name: Build application
         run: mise build
