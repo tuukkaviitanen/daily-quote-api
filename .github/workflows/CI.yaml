@@ -17,21 +17,18 @@ jobs:
       - name: Fetch code
         uses: actions/checkout@v4
 
-      - name: Set up cli tools with mise Mise
+      - name: Set up cli tools with Mise
         uses: jdx/mise-action@v2
 
-      - name: Install project dependencies
-        run: go mod download
+      # There seems to be a bug where the runner has a mise cache with Rust, but without cargo-fmt or clippy, which sometimes fails these
+      # - name: "Check formatting"
+      #   run: mise format:check
+
+      # - name: "Check linter"
+      #   run: mise lint:check
 
       - name: Build application
-        run: mise run build
-
-      - name: Upload binary as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: build
-          path: ./daily-quote-api
-          retention-days: 30
+        run: mise build
 
   tag_release:
     needs: ["verification"]

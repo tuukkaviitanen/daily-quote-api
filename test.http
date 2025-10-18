@@ -1,0 +1,26 @@
+### Default quote
+GET http://localhost:8080/quote
+
+### Quote of the second
+GET http://localhost:8080/quote?of_the=second
+
+### Quote of the minute
+GET http://localhost:8080/quote?of_the=minute
+
+### Quote of the hour
+GET http://localhost:8080/quote?of_the=hour
+
+### Quote of the day
+GET http://localhost:8080/quote?of_the=day
+
+### Quote of the week
+GET http://localhost:8080/quote?of_the=week
+
+### Quote of the month
+GET http://localhost:8080/quote?of_the=month
+
+### Quote of the year
+GET http://localhost:8080/quote?of_the=year
+
+### Invalid unit of time
+GET http://localhost:8080/quote?of_the=decade

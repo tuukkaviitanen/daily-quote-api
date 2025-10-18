@@ -1,9 +1,10 @@
 [tools]
-go = "1.23.0"
+rust = { version = "1.90.0", profile = "default" }
 
-[tasks.run]
-run = "go run ./cmd/daily-quote-api"
-
-[tasks.build]
-run = "go build -a -installsuffix cgo ./cmd/daily-quote-api"
-env = { CGO_ENABLED = 0, GOOS = "linux" }
+[tasks]
+default = "docker build -t daily-quote-api-dev . && docker run --rm -p 8080:8080 daily-quote-api-dev"
+build = "cargo build"
+"format:check" = "cargo fmt --check"
+"format:fix" = "cargo fmt"
+"lint:check" = "cargo clippy"
+"lint:fix" = "cargo clippy --fix"
