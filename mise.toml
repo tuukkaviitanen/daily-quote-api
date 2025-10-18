@@ -1,6 +1,8 @@
 [tools]
-go = "1.23.0"
 rust = "1.90.0"
+cargo-binstall = "latest"
+"cargo:fmt" = "latest"
+"cargo:clippy" = "latest"
 
 [tasks]
 default = "docker build -t daily-quote-api-dev . && docker run --rm -p 8080:8080 daily-quote-api-dev"
