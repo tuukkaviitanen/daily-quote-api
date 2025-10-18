@@ -1,6 +1,8 @@
-use poem::{listener::TcpListener, web::{Data}, EndpointExt, Result, Route};
+use poem::{EndpointExt, Result, Route, listener::TcpListener, web::Data};
 use poem_openapi::{
-    param::Query, payload::{Json, Response}, ApiResponse, OpenApi, OpenApiService, Tags
+    ApiResponse, LicenseObject, OpenApi, OpenApiService, Tags,
+    param::Query,
+    payload::{Json, Response},
 };
 
 #[derive(ApiResponse)]
@@ -8,7 +10,7 @@ enum QuoteResponses {
     #[oai(status = "200")]
     Quote(Json<QuoteResponse>),
     #[oai(status = "500")]
-    InternalServerError
+    InternalServerError,
 }
 
 struct Api;
@@ -31,10 +33,10 @@ impl Api {
         let unit_of_time = of_the.0.unwrap_or_default();
 
         let epoch = unit_of_time_to_epoch(&unit_of_time).map_err(|e| {
-                eprintln!("Error converting unit of time to epoch: {}", e);
-                QuoteResponses::InternalServerError
+            eprintln!("Error converting unit of time to epoch: {}", e);
+            QuoteResponses::InternalServerError
         })?;
-        
+
         let quote_count = query_quote_count(&conn).await.map_err(|e| {
             eprintln!("Database error: {}", e);
             QuoteResponses::InternalServerError
@@ -65,7 +67,9 @@ impl Api {
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
-    let api_service = OpenApiService::new(Api, "Daily Quote API", "1.0").description("Provides quotes").license("MIT");
+    let api_service = OpenApiService::new(Api, "Daily Quote API", "1.0")
+        .description("Provides quotes")
+        .license(LicenseObject::new("MIT").url("http://opensource.org/licenses/MIT"));
 
     let ui = api_service.swagger_ui();
 
@@ -129,7 +133,7 @@ impl UnitOfTime {
 }
 
 use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, Timelike, Utc};
-use poem_openapi::{Object, Enum};
+use poem_openapi::{Enum, Object};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 

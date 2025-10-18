@@ -2,5 +2,10 @@
 go = "1.23.0"
 rust = "1.90.0"
 
-[tasks.default]
-run = "docker build -t daily-quote-api-dev . && docker run --rm -p 8080:8080 daily-quote-api-dev"
+[tasks]
+default = "docker build -t daily-quote-api-dev . && docker run --rm -p 8080:8080 daily-quote-api-dev"
+build = "cargo build"
+"format:check" = "cargo fmt --check"
+"format:fix" = "cargo fmt"
+"lint:check" = "cargo clippy"
+"lint:fix" = "cargo clippy --fix"
